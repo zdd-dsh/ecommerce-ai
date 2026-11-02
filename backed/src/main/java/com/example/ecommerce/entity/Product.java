@@ -1,4 +1,4 @@
 package com.example.ecommerce.entity;
 
-public class Student {
+public class product {
 }
