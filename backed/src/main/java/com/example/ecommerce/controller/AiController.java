@@ -4,6 +4,7 @@ import com.example.ecommerce.common.BusinessException;
 import com.example.ecommerce.dto.AiChatRequest;
 import com.example.ecommerce.entity.Product;
 import com.example.ecommerce.mapper.ProductMapper;
+import com.example.ecommerce.service.impl.ProductServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.ai.chat.client.ChatClient;
@@ -26,7 +27,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/ai")
 public class AiController {
 
-    private static final String SYSTEM_PROMPT = "你是电商导购，只基于平台商品回答，不知道就说不知道";
+    private static final String SYSTEM_PROMPT =
+            "你是电商导购，只基于平台商品回答，不知道就说不知道。"
+                    + "回答时不要暴露类目编号、商品 ID 等内部字段，用自然语言描述商品。";
+
     private static final int MAX_PRODUCTS = 20;
     private static final int ON_SALE_STATUS = 1;
 
@@ -88,14 +92,17 @@ public class AiController {
     private String formatOnSaleProducts(List<Product> products) {
         StringBuilder catalog = new StringBuilder();
         for (Product product : products) {
-            catalog.append("- 名称：").append(product.getName())
-                    .append("，价格：").append(product.getPrice())
-                    .append("，库存：").append(product.getStock())
-                    .append("，类目ID：").append(product.getCategoryId())
+            String categoryName = ProductServiceImpl.CATEGORY_LABELS
+                    .getOrDefault(product.getCategoryId(), "其他");
+            catalog.append("- ").append(product.getName())
+                    .append("，价格 ").append(product.getPrice()).append(" 元")
+                    .append("，库存 ").append(product.getStock()).append(" 件")
+                    .append("，类目：").append(categoryName)
                     .append('\n');
         }
         return catalog.toString();
     }
+
 
     private void sendChunk(SseEmitter emitter, String chunk) {
         try {

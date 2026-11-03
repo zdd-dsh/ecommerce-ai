@@ -35,6 +35,7 @@
      <main class="main-content">
       <router-view />
      </main>
+     <AiChat />
   </div>
 </template>
 
@@ -42,6 +43,7 @@
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { getToken, getUser , removeUser, removeToken } from './utils/auth'
+  import AiChat from './components/AiChat.vue'
   
   //创建路由实例 用于跳转页面（router包下的index.js）
   const router = useRouter()
