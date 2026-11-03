@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.OrderMapper">
+
+    <!--结果映射： Order类和order表的映射关系 -->
+    <resultMap id="BaseResultMap" type="com.example.ecommerce.entity.Order">
+        <id column="id" property="id"></id>
+        <result column="user_id" property="userId"></result>
+        <result column="order_no" property="orderNo"></result>
+        <result column="total_amount" property="totalAmount"></result>
+        <result column="status" property="status"></result>
+        <result column="address" property="address"></result>
+        <result column="phone" property="phone"></result>
+        <result column="receiver" property="receiver"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="update_time" property="updateTime"></result>
+    </resultMap>
+
+    <!-- sql语句，定义可复用的列名 -->
+    <sql id="Base_Column_List">
+        id, user_id, order_no, total_amount, status, address, phone, receiver, create_time, update_time
+    </sql>
+
+
+    <!-- 说明：表名`order`必须用反引号包裹，因为MySQL报语法错误-->
+
+    <!-- 配置 Order selectById(Long id) 方法 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" /> from `order` where id = #{id}
+    </select>
+
+    <!-- 配置Order selectByOrderNo(String orderNo)方法 -->
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" /> from `order` where order_no = #{orderNo}
+    </select>
+
+    <!-- 配置 List<Order> selectByUserId(Long userId) 方法 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" /> from `order` where user_id = #{userId} order by create_time desc
+    </select>
+
+    <!-- 配置List<Order> selectAll()方法 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List" /> from `order` order by create_time desc
+    </select>
+
+    <!-- 配置int insert(Order order)方法 -->
+    <insert id="insert" parameterType="com.example.ecommerce.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        insert into `order`(user_id, order_no, total_amount, status, address, phone, receiver, create_time, update_time)
+        values(#{userId}, #{orderNo}, #{totalAmount}, #{status}, #{address}, #{phone}, #{receiver}, now(), now())
+    </insert>
+
+    <!-- 配置int update(Order order)方法 -->
+    <update id="update" parameterType="com.example.ecommerce.entity.Order">
+        update `order`
+        set user_id = #{userId},
+            order_no = #{orderNo},
+            total_amount = #{totalAmount},
+            status = #{status},
+            address = #{address},
+            phone = #{phone},
+            receiver = #{receiver},
+            update_time = now()
+        where id= #{id}
+    </update>
+
+    <!-- 配置int delete(Long id)方法 -->
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from `order` where id = #{id}
+    </delete>
+
+    <!-- 配置int updateStatusByOrderNo(@Param("orderNo") String orderNo, @Param("status") Integer status)方法 -->
+    <update id="updateStatusByOrderNo">
+        update `order` set status = #{status}, update_time = now() where order_no = #{orderNo}
+    </update>
+
+
+</mapper>

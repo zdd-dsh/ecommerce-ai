@@ -216,10 +216,8 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.12</version>
-        <configuration>
-          <destFile>${java.io.tmpdir}/jacoco-${project.artifactId}.exec/destFile</destFile>
-          <dataFile>${java.io.tmpdir}/jacoco-${project.artifactId}.exec/dataFile</dataFile>
-        </configuration>
+        <!-- 曾自定义 destFile/dataFile 到临时目录，但 prepare-agent 与 report 读写路径不一致，
+             导致覆盖率报告永远生成不出来。改用默认 target/jacoco.exec 与 target/site/jacoco。 -->
         <executions>
           <execution>
             <id>prepare-agent</id>

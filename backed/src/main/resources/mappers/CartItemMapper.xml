@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.CartItemMapper">
+    <!--基础的结果映射（表cart_item中的字段和实体类CartItem中的对应关系）-->
+    <resultMap id="BaseResultMap" type="com.example.ecommerce.entity.CartItem">
+        <id column="id" property="id"></id>
+        <result column="user_id" property="userId"></result>
+        <result column="product_id" property="productId"></result>
+        <result column="quantity" property="quantity"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="update_time" property="updateTime"></result>
+    </resultMap>
+
+    <!--联表的映射关系（表cart_item和表product 对应 DTO包中的类CartItemResponse）-->
+    <resultMap id="CartItemResponseMap" type="com.example.ecommerce.dto.CartItemResponse">
+        <id column="id" property="id"></id>
+        <result column="user_id" property="userId"></result>
+        <result column="product_id" property="productId"></result>
+        <result column="product_name" property="productName"></result>
+        <result column="price" property="price"></result>
+        <result column="image" property="image"></result>
+        <result column="stock" property="stock"></result>
+        <result column="quantity" property="quantity"></result>
+        <result column="subtotal" property="subtotal"></result>
+    </resultMap>
+
+    <!-- 配置 CartItem selectById(@Param("id") Long id) 方法 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        select id, user_id, product_id, quantity, create_time, update_time
+        from cart_item
+        where id= #{id}
+    </select>
+
+    <select id="selectByUserAndProduct" resultMap="BaseResultMap">
+        select id, user_id, product_id, quantity, create_time, update_time
+        from cart_item
+        where user_id = #{userId} and product_id = #{productId}
+    </select>
+
+    <!-- 配置 List<CartItemResponse> selectCartByUserId(@Param("userId") Long userId) 方法 -->
+    <select id="selectCartByUserId" resultMap="CartItemResponseMap">
+        select ci.id, ci.user_id, ci.product_id, p.name as product_name,
+               p.price, p.image, p.stock, ci.quantity, p.price*ci.quantity as subtotal
+        from cart_item ci inner join product p on ci.product_id = p.id
+        where ci.user_id= #{userId}
+    </select>
+
+    <!-- 配置 int insert(CartItem cartItem) 方法 -->
+    <insert id="insert" parameterType="com.example.ecommerce.entity.CartItem" useGeneratedKeys="true" keyProperty="id">
+        insert into cart_item(user_id, product_id, quantity, create_time, update_time)
+        values(#{userId}, #{productId}, #{quantity}, now(), now())
+    </insert>
+
+    <!-- 配置 int updateQuantity(@Param("id") Long id, @Param("userId") Long userId, @Param("quantity") Integer quantity) 方法 -->
+    <update id="updateQuantity">
+        update cart_item set quantity = #{quantity}, update_time=now()
+        where id=#{id} and user_id=#{userId}
+    </update>
+
+
+    <!-- 配置 int increaseQuantity(@Param("id") Long id, @Param("quantity") Integer quantity) 方法 -->
+    <update id="increaseQuantity">
+        update cart_item set quantity = #{quantity}, update_time=now()
+        where id=#{id}
+    </update>
+
+    <!-- 配置 int deleteByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId) 方法 -->
+    <delete id="deleteByIdAndUserId">
+        delete from cart_item where id=#{id} and user_id=#{userId}
+    </delete>
+
+    <!-- 配置 int deleteByUserId(@Param("userId") Long userId) 方法 -->
+    <delete id="deleteByUserId">
+        delete from cart_item where user_id=#{userId}
+    </delete>
+
+
+
+</mapper>

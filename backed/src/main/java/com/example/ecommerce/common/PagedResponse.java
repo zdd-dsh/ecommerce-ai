@@ -10,16 +10,16 @@ import java.util.List;
  *       page：当前页
  *       size:每页条数
  * */
-public class PageResponse<T> {
+public class PagedResponse<T> {
     private List<T> items;
     private long total;
     private int page;
     private int size;
 
-    public PageResponse() {
+    public PagedResponse() {
     }
 
-    public PageResponse(List<T> items, long total, int page, int size) {
+    public PagedResponse(List<T> items, long total, int page, int size) {
         this.items = items;
         this.total = total;
         this.page = page;
@@ -27,8 +27,8 @@ public class PageResponse<T> {
     }
 
     // 新增静态of工厂方法，给service调用
-    public static <T> PageResponse<T> of(List<T> records, long total, int page, int size){
-        return new PageResponse<>(records, total, page, size);
+    public static <T> PagedResponse<T> of(List<T> records, long total, int page, int size){
+        return new PagedResponse<>(records, total, page, size);
     }
 
     public List<T> getItems() {

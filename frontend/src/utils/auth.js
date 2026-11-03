@@ -4,46 +4,61 @@
  * 
  */
 const TOKEN_KEY = 'ecommerce_token'
-const USER_KEY = 'ecommmerce_user'
+const USER_KEY = 'ecommerce_user'
+
+export const isLoggedIn = ()=>Boolean(getToken())
+
+export const isAdmin = (user=getUser()) =>{
+  return (user? user.role : '').toUpperCase() === 'ADMIN'
+}
+
 /**
  * 获取Token
- * 
- * 
  */
 export function getToken() {
     return localStorage.getItem(TOKEN_KEY)
 }
+
 /**
  * 设置Token
- * 
  */
-export function setToken(){
+export function setToken(token){
     localStorage.setItem(TOKEN_KEY,token)
 }
+
 /**
  * 移除Token
- * 
  */
-export function moveToken(){
+export function removeToken(){
     localStorage.removeItem(TOKEN_KEY)
 }
-/**T
+
+/**
  * 获取用户信息
- * 
  */
 export function getUser(){
     const user = localStorage.getItem(USER_KEY)
-    user ? JSON.parse(user) : null
+    return user ? JSON.parse(user) : null
 }
+
 /**
  * 设置用户信息
  */
 export function setUser(user){
     localStorage.setItem(USER_KEY,JSON.stringify(user))
 }
+
 /**
  * 移除用户信息
  */
-export function moveUser(){
+export function removeUser(){
     localStorage.removeItem(USER_KEY)
+}
+
+/**
+ * 清空全部登录信息（登出）
+ */
+export function clearAuth(){
+  removeToken()
+  removeUser()
 }

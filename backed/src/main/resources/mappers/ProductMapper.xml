@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.ProductMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ecommerce.entity.Product">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="description" property="description"></result>
+        <result column="price" property="price"></result>
+        <result column="stock" property="stock"></result>
+        <result column="image" property="image"></result>
+        <result column="category_id" property="categoryId"></result>
+        <result column="merchant_id" property="merchantId"></result>
+        <result column="status" property="status"></result>
+        <result column="create_time" property="createTime"></result>
+        <result column="update_time" property="updateTime"></result>
+    </resultMap>
+
+    <!-- 修复：Colum → Column -->
+    <sql id="Base_Column_List">
+        id,name,description,price,stock,image,category_id,merchant_id,status,create_time,update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from product where id=#{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from product
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from product
+        <where>
+            status =1
+            <if test="request.keyword !=null and request.keyword !=''">
+                <!--修复：写死字符串改为参数 #{request.keyword} -->
+                and (name like concat ('%',#{request.keyword},'%')
+                or description like concat('%',#{request.keyword},'%'))
+            </if>
+            <!--分类筛选-->
+            <if test="request.categoryId !=null">
+                and category_id = #{request.categoryId}
+            </if>
+            <!--修复1：minprice → minPrice；修复2：<![CDATA[>=]]> 去掉多余空格 -->
+            <if test="request.minPrice != null">
+                and price <![CDATA[>=]]> #{request.minPrice}
+            </if>
+            <!--可以补充maxPrice最高价条件-->
+            <if test="request.maxPrice != null">
+                and price <![CDATA[<=]]> #{request.maxPrice}
+            </if>
+        </where>
+
+        <choose>
+            <when test="request.sortBy == 'price' ">
+                <choose>
+                    <when test="request.sortDirection == 'asc'">order by price asc</when>
+                    <otherwise>order by price desc</otherwise>
+                </choose>, id desc
+            </when>
+            <when test="request.sortBy == 'stock'">
+                <choose>
+                    <when test="request.sortDirection == 'asc'">order by stock asc</when>
+                    <otherwise>order by stock desc</otherwise>
+                </choose>, id desc
+            </when>
+            <when test="request.sortBy == 'name'">
+                <choose>
+                    <when test="request.sortDirection == 'asc'">order by name asc</when>
+                    <otherwise>order by name desc</otherwise>
+                </choose>, id desc
+            </when>
+            <otherwise>order by update_time desc, id desc</otherwise>
+        </choose>
+        limit #{request.offset}, #{request.normalizedPageSize}
+
+    </select>
+
+    <!-- 配置 long countPage(@Param("request") ProductQueryRequest request) 方法 -->
+    <select id="countPage" resultType="long">
+        select count(*) from product
+        <where>
+            <!--固定条件: 只查询上架商品 商品状态 1=上架(可购买) 0=下架(不可见)-->
+            status = 1
+            <!--关键词模糊搜索(同时匹配商品名称或商品描述)-->
+            <if test="request.keyword !=null and request.keyword != ''">
+                and (name like concat ('%', #{request.keyword},'%')
+                or description like concat('%', #{request.keyword}, '%'))
+            </if>
+            <!--分类筛选(category_id)-->
+            <if test="request.categoryId != null">
+                and category_id = #{request.categoryId}
+            </if>
+            <!--最低价格 CDATA转义 >= -->
+            <if test="request.minPrice != null">
+                and price <![CDATA[>=]]> #{request.minPrice}
+            </if>
+            <!--最高价格-->
+            <if test="request.maxPrice != null">
+                and price <![CDATA[<=]]> #{request.maxPrice}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByCategoryId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from product where category_id = #{categoryId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.ecommerce.entity.Product">
+        insert into product(name,description,price,stock,image,category_id,merchant_id,status,create_time,update_time)
+        values(#{name}, #{description}, #{price}, #{stock}, #{image}, #{categoryId}, #{merchantId}, #{status}, now(), now())
+    </insert>
+
+    <update id="update" parameterType="com.example.ecommerce.entity.Product">
+        update product
+        set name=#{name}, description=#{description}, price=#{price}, stock=#{stock}, image=#{image}, category_id=#{categoryId}, merchant_id=#{merchantId}, status=#{status}
+        , update_time=now()
+        where id=#{id}
+    </update>
+    <delete id="delete" parameterType="java.lang.Long">
+        delete  from product where id = #{id}
+    </delete>
+
+    <update id="decreaseStock">
+        update product
+        set stock = stock - #{quantity}, update_time = now()
+        where id= #{productId} and status = 1 and stock >= #{quantity}
+    </update>
+</mapper>

@@ -1,0 +1,36 @@
+# Spring 框架全局顶层配置
+spring:
+  # MySQL数据库连接配置
+  datasource:
+    # 数据库名改成 book_db
+    url: jdbc:mysql://localhost:3306/book_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+  # Security 内置用户（测试用）
+  security:
+    user:
+      name: admin
+      password: 123456
+      roles: ADMIN
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.book.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 日志级别（包名改成 com.example.book）
+logging:
+  level:
+    com.example.book: debug
+    com.example.book.mapper: debug

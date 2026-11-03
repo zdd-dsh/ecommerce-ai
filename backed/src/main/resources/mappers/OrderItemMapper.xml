@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ecommerce.mapper.OrderItemMapper">
+    <resultMap id="OrderItemMap" type="com.example.ecommerce.entity.OrderItem">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="price" column="price"/>
+        <result property="quantity" column="quantity"/>
+    </resultMap>
+
+    <!-- 根据订单id查询订单明细 -->
+    <select id="selectByOrderId" resultMap="OrderItemMap">
+        SELECT id, order_id, product_id, product_name, price, quantity
+        FROM order_item
+        WHERE order_id = #{orderId}
+    </select>
+
+    <!-- 单条插入订单明细 -->
+    <insert id="insert">
+        INSERT INTO order_item(order_id, product_id, product_name, price, quantity)
+        VALUES(#{orderId}, #{productId}, #{productName}, #{price}, #{quantity})
+    </insert>
+
+    <!-- 批量插入订单明细 -->
+    <insert id="batchInsert">
+        INSERT INTO order_item(order_id, product_id, product_name, price, quantity)
+        VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.orderId}, #{item.productId}, #{item.productName}, #{item.price}, #{item.quantity})
+        </foreach>
+    </insert>
+
+    <!-- 根据订单id删除所有明细 -->
+    <delete id="deleteByOrderId">
+        DELETE FROM order_item WHERE order_id = #{orderId}
+    </delete>
+
+</mapper>
