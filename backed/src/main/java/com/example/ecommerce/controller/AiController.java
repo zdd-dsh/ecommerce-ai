@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -30,6 +32,7 @@ public class AiController {
     private static final String SYSTEM_PROMPT =
             "你是电商导购，只基于平台商品回答，不知道就说不知道。"
                     + "回答时不要暴露类目编号、商品 ID 等内部字段，用自然语言描述商品。";
+    private static final Logger log = LoggerFactory.getLogger(AiController.class);
 
     private static final int MAX_PRODUCTS = 20;
     private static final int ON_SALE_STATUS = 1;
@@ -73,20 +76,27 @@ public class AiController {
     private String buildSystemPrompt() {
         String catalog = formatOnSaleProducts(loadOnSaleProducts());
         if (catalog.isEmpty()) {
-            return SYSTEM_PROMPT;
+            return SYSTEM_PROMPT
+                    + "\n\n注意：当前无法获取平台商品数据。"
+                    + "请如实告知用户暂时查不到商品信息，不要编造商品名称、参数或价格。";
         }
         return SYSTEM_PROMPT + "\n\n平台在售商品：\n" + catalog;
     }
-
     private List<Product> loadOnSaleProducts() {
-        List<Product> products = productMapper.selectAll();
-        if (products == null || products.isEmpty()) {
+        try {
+            List<Product> products = productMapper.selectAll();
+            if (products == null || products.isEmpty()) {
+                return Collections.emptyList();
+            }
+            return products.stream()
+                    .filter(product -> product != null && Objects.equals(product.getStatus(), ON_SALE_STATUS))
+                    .limit(MAX_PRODUCTS)
+                    .collect(Collectors.toList());
+        } catch (Exception ex) {
+            // 依赖故障时降级：本次不注入商品上下文，但对话继续进行
+            log.warn("加载在售商品失败，降级为无商品上下文继续对话", ex);
             return Collections.emptyList();
         }
-        return products.stream()
-                .filter(product -> product != null && Objects.equals(product.getStatus(), ON_SALE_STATUS))
-                .limit(MAX_PRODUCTS)
-                .collect(Collectors.toList());
     }
 
     private String formatOnSaleProducts(List<Product> products) {
